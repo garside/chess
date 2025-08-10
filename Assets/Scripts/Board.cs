@@ -1,0 +1,59 @@
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
+using System.Collections.Generic;
+
+[RequireComponent(typeof(GridLayoutGroup))]
+public class Board : MonoBehaviour {
+  [System.Serializable] public class BoolEvent : UnityEvent<bool> { }
+
+  public const int Columns = 8;
+  public const int Rows = 8;
+
+  public BoolEvent OnShowSquareNameChanged;
+  public UnityEvent OnReady;
+
+  public Palette Palette => palette;
+
+  public bool IsReady { get; private set; }
+
+  public bool ShowSquareName {
+    get => showSquareName;
+    set {
+      if (showSquareName == value) return;
+      showSquareName = value;
+      OnShowSquareNameChanged.Invoke(value);
+    }
+  }
+
+  [Header("Tile Settings")]
+  [SerializeField] private Palette palette;
+  [SerializeField] private GameObject tilePrefab;
+
+  private bool showSquareName = true;
+
+  private GridLayoutGroup gridLayoutGroup;
+
+  private readonly List<Square> squares = new();
+
+  private void Start() {
+    bool black = false;
+    for (int row = 0; row < Rows; row++) {
+      for (int column = 0; column < Columns; column++) {
+        var square = Instantiate(tilePrefab, transform).GetComponent<Square>();
+        square.Configure(this, column, row, black);
+        black = !black;
+      }
+      black = !black;
+    }
+
+    IsReady = true;
+    OnReady.Invoke();
+  }
+
+  private void Awake() {
+    gridLayoutGroup = GetComponent<GridLayoutGroup>();
+    gridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+    gridLayoutGroup.constraintCount = Columns;
+  }
+}
