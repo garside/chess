@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0556a011d4ffa4058acca203d5d5590b, type: 3}
   m_Name: Palette_Squares
   m_EditorClassIdentifier: 
-  black: {r: 0.3137255, g: 0.3254902, b: 0.5647059, a: 1}
-  white: {r: 0.84313726, g: 0.84313726, b: 0.87058824, a: 1}
+  white: {r: 1, g: 1, b: 1, a: 1}
+  black: {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}

@@ -14,22 +14,12 @@ public class Board : MonoBehaviour {
   public const int MaxColumn = Columns - 1;
   public const int MaxRow = Rows - 1;
 
-  public BoolEvent OnShowSquareNameChanged;
   public BoolEvent OnShowSquareDetailChanged;
   public UnityEvent OnReady;
 
   public Palette Palette => palette;
 
   public bool IsReady { get; private set; }
-
-  public bool ShowSquareName {
-    get => showSquareName;
-    set {
-      if (showSquareName == value) return;
-      showSquareName = value;
-      OnShowSquareNameChanged.Invoke(value);
-    }
-  }
 
   public bool ShowSquareDetail {
     get => showSquareDetail;
@@ -47,7 +37,6 @@ public class Board : MonoBehaviour {
   [SerializeField] private Palette palette;
   [SerializeField] private GameObject tilePrefab;
 
-  private bool showSquareName = true;
   private bool showSquareDetail = true;
 
   private GridLayoutGroup gridLayoutGroup;
@@ -55,15 +44,15 @@ public class Board : MonoBehaviour {
   private readonly List<Square> squares = new();
 
   private void Start() {
-    bool black = false;
+    bool isWhite = true;
     for (int row = 0; row < Rows; row++) {
       for (int column = 0; column < Columns; column++) {
         var square = Instantiate(tilePrefab, transform).GetComponent<Square>();
-        square.Configure(this, column, row, black);
+        square.Configure(this, column, row, isWhite);
         squares.Add(square);
-        black = !black;
+        isWhite = !isWhite;
       }
-      black = !black;
+      isWhite = !isWhite;
     }
 
     IsReady = true;

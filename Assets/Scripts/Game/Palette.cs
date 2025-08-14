@@ -2,12 +2,12 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "Palette", menuName = "Resources/Palette")]
 public class Palette : ScriptableObject {
-  public Color Black => black;
   public Color White => white;
+  public Color Black => black;
 
   [Header("Colors")]
-  [SerializeField] private Color black;
   [SerializeField] private Color white;
+  [SerializeField] private Color black;
 
-  public Color For(bool black) => black ? Black : White;
+  public Color For(bool isWhite) => isWhite ? White : Black;
 }

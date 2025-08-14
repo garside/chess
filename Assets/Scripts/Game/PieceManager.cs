@@ -217,19 +217,11 @@ public class PieceManager : MonoBehaviour {
   }
 
   private void Summarize(Square square) {
-    var allowed = moves.Where(move => move.Square == square && move.Type == MoveType.Allowed);
-    var claimCount = allowed.Count();
+    var coverage = moves.Where(move => move.Square == square);
+    var white = coverage.Count(move => move.Piece.IsWhite);
+    var black = coverage.Count(move => !move.Piece.IsWhite);
 
-    square.ClaimCount = claimCount;
-
-    if (claimCount == 0) square.Claim = Square.ClaimType.Undefined;
-    else if (allowed.All(move => move.Piece.IsWhite)) {
-      square.Claim = PlayerIsWhite ? Square.ClaimType.Player : Square.ClaimType.Opponent;
-    } else if (allowed.All(move => !move.Piece.IsWhite)) {
-      square.Claim = PlayerIsWhite ? Square.ClaimType.Opponent : Square.ClaimType.Player;
-    } else square.Claim = Square.ClaimType.Contested;
-
-    square.GuardedCount = moves.Count(move => move.Square == square && move.Type == MoveType.Guarded);
-    square.OpposedCount = moves.Count(move => move.Square == square && move.Type == MoveType.Opposed);
+    square.PlayerCoverage = PlayerIsWhite ? white : black;
+    square.EnemyCoverage = PlayerIsWhite ? black : white;
   }
 }
