@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0556a011d4ffa4058acca203d5d5590b, type: 3}
-  m_Name: Palette
+  m_Name: Palette_Pieces
   m_EditorClassIdentifier: 
   black: {r: 0.101960786, g: 0.12156863, b: 0.11764706, a: 1}
   white: {r: 0.98039216, g: 1, b: 0.99607843, a: 1}

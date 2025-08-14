@@ -45,7 +45,7 @@ public class GameController : MonoBehaviour {
   }
 
   private void HandleBoardReady() {
-    pieceManager.Generate(board);
+    pieceManager.Generate(board, true);
     ReadyUp();
   }
 

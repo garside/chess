@@ -13,31 +13,48 @@ public class PieceManager : MonoBehaviour {
     public GameObject king;
   }
 
+  [System.Serializable]
+  private class Move {
+    public Piece Piece;
+    public Square Square;
+    public MoveType Type;
+
+    public Move(Piece piece, Square square, MoveType type) {
+      Piece = piece;
+      Square = square;
+      Type = type;
+    }
+  }
+
   private enum MoveType {
     Invalid,
     Allowed,
-    Blocked,
-    Capture,
+    Opposed,
+    Guarded,
   }
+
+  public bool PlayerIsWhite { get; private set; }
 
   [SerializeField] private PiecePrefabs piecePrefabs;
   [SerializeField] private Palette palette;
 
   private readonly List<Piece> pieces = new();
   private readonly HashSet<Piece> moved = new();
-  private readonly Dictionary<Piece, List<Square>> moves = new();
+  private readonly List<Move> moves = new();
 
   private Board board;
 
   public Piece this[Square square] => pieces.FirstOrDefault(piece => piece.Square == square);
 
-  public void Generate(Board board) {
+  public void Generate(Board board, bool playerIsWhite) {
+    PlayerIsWhite = playerIsWhite;
     this.board = board;
 
     CreateWhitePieces();
     CreateBlackPieces();
 
-    foreach (var piece in pieces) CalculateMoves(piece);
+    foreach (var piece in pieces) Calculate(piece);
+    foreach (var square in board.Squares) Summarize(square);
   }
 
   private GameObject PrefabFor(Piece.PieceType pieceType) {
@@ -99,10 +116,7 @@ public class PieceManager : MonoBehaviour {
     CreatePiece(Piece.PieceType.King, false, board["d8"]);
   }
 
-  public void CalculateMoves(Piece piece) {
-    if (moves.ContainsKey(piece)) moves[piece].Clear();
-    else moves[piece] = new();
-
+  public void Calculate(Piece piece) {
     switch (piece.Type) {
       case Piece.PieceType.Pawn:
         CalculatePawnMoves(piece);
@@ -123,21 +137,22 @@ public class PieceManager : MonoBehaviour {
         CalculateKingMoves(piece);
         break;
     }
-
-    Debug.LogFormat("{0} {1} @{2} moves: {3}", piece.IsWhite ? "White" : "Black", piece.Type, piece.Square.name, string.Join(", ", moves[piece].Select(move => move.name)));
   }
 
   private MoveType AddMove(Piece piece, Square square) {
     if (square == null) return MoveType.Invalid;
 
+    var moveType = MoveType.Allowed;
+
     var pieceOnSquare = this[square];
     if (pieceOnSquare != null) {
-      if (pieceOnSquare.IsWhite == piece.IsWhite) return MoveType.Blocked;
-      return MoveType.Capture;
+      moveType = pieceOnSquare.IsWhite == piece.IsWhite ? MoveType.Guarded : MoveType.Opposed;
     }
 
-    moves[piece].Add(square);
-    return MoveType.Allowed;
+    Move move = new(piece, square, moveType);
+    Debug.LogFormat("{0} {1} => {2} {3}", piece.Type, piece.Square.name, square.name, moveType);
+    moves.Add(move);
+    return moveType;
   }
 
   private void CalculatePawnMoves(Piece piece) {
@@ -147,28 +162,74 @@ public class PieceManager : MonoBehaviour {
   }
 
   private void CalculateRookMoves(Piece piece) {
-    for (int up = 1; up < Board.Rows; up++) {
+    for (int up = 1; up < Board.Size; up++) {
       if (AddMove(piece, piece.Square.Up(up)) != MoveType.Allowed) break;
     }
 
-    for (int down = 1; down < Board.Rows; down++) {
+    for (int down = 1; down < Board.Size; down++) {
       if (AddMove(piece, piece.Square.Down(down)) != MoveType.Allowed) break;
+    }
+
+    for (int left = 1; left < Board.Size; left++) {
+      if (AddMove(piece, piece.Square.Left(left)) != MoveType.Allowed) break;
+    }
+
+    for (int right = 1; right < Board.Size; right++) {
+      if (AddMove(piece, piece.Square.Right(right)) != MoveType.Allowed) break;
     }
   }
 
   private void CalculateKnightMoves(Piece piece) {
-
   }
 
   private void CalculateBishopMoves(Piece piece) {
+    for (int ul = 1; ul < Board.Size; ul++) {
+      if (AddMove(piece, piece.Square.UpLeft(ul)) != MoveType.Allowed) break;
+    }
 
+    for (int ur = 1; ur < Board.Size; ur++) {
+      if (AddMove(piece, piece.Square.UpRight(ur)) != MoveType.Allowed) break;
+    }
+
+    for (int dl = 1; dl < Board.Size; dl++) {
+      if (AddMove(piece, piece.Square.DownLeft(dl)) != MoveType.Allowed) break;
+    }
+
+    for (int dr = 1; dr < Board.Size; dr++) {
+      if (AddMove(piece, piece.Square.DownRight(dr)) != MoveType.Allowed) break;
+    }
   }
 
   private void CalculateQueenMoves(Piece piece) {
-
+    CalculateRookMoves(piece);
+    CalculateBishopMoves(piece);
   }
 
   private void CalculateKingMoves(Piece piece) {
+    AddMove(piece, piece.Square.Up(1));
+    AddMove(piece, piece.Square.Down(1));
+    AddMove(piece, piece.Square.Left(1));
+    AddMove(piece, piece.Square.Right(1));
+    AddMove(piece, piece.Square.UpLeft(1));
+    AddMove(piece, piece.Square.UpRight(1));
+    AddMove(piece, piece.Square.DownLeft(1));
+    AddMove(piece, piece.Square.DownRight(1));
+  }
 
+  private void Summarize(Square square) {
+    var allowed = moves.Where(move => move.Square == square && move.Type == MoveType.Allowed);
+    var claimCount = allowed.Count();
+
+    square.ClaimCount = claimCount;
+
+    if (claimCount == 0) square.Claim = Square.ClaimType.Undefined;
+    else if (allowed.All(move => move.Piece.IsWhite)) {
+      square.Claim = PlayerIsWhite ? Square.ClaimType.Player : Square.ClaimType.Opponent;
+    } else if (allowed.All(move => !move.Piece.IsWhite)) {
+      square.Claim = PlayerIsWhite ? Square.ClaimType.Opponent : Square.ClaimType.Player;
+    } else square.Claim = Square.ClaimType.Contested;
+
+    square.GuardedCount = moves.Count(move => move.Square == square && move.Type == MoveType.Guarded);
+    square.OpposedCount = moves.Count(move => move.Square == square && move.Type == MoveType.Opposed);
   }
 }

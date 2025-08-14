@@ -8,12 +8,14 @@ using System.Linq;
 public class Board : MonoBehaviour {
   [System.Serializable] public class BoolEvent : UnityEvent<bool> { }
 
+  public const int Size = 8;
   public const int Columns = 8;
   public const int Rows = 8;
   public const int MaxColumn = Columns - 1;
   public const int MaxRow = Rows - 1;
 
   public BoolEvent OnShowSquareNameChanged;
+  public BoolEvent OnShowSquareDetailChanged;
   public UnityEvent OnReady;
 
   public Palette Palette => palette;
@@ -29,6 +31,16 @@ public class Board : MonoBehaviour {
     }
   }
 
+  public bool ShowSquareDetail {
+    get => showSquareDetail;
+    set {
+      if (showSquareDetail == value) return;
+      showSquareDetail = value;
+      OnShowSquareDetailChanged.Invoke(value);
+    }
+  }
+
+  public Square[] Squares => squares.ToArray();
   public Square this[string squareName] => squares.FirstOrDefault(square => square.name == squareName);
 
   [Header("Tile Settings")]
@@ -36,6 +48,7 @@ public class Board : MonoBehaviour {
   [SerializeField] private GameObject tilePrefab;
 
   private bool showSquareName = true;
+  private bool showSquareDetail = true;
 
   private GridLayoutGroup gridLayoutGroup;
 
