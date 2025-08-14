@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 
 [RequireComponent(typeof(GridLayoutGroup))]
 public class Board : MonoBehaviour {
@@ -9,6 +10,8 @@ public class Board : MonoBehaviour {
 
   public const int Columns = 8;
   public const int Rows = 8;
+  public const int MaxColumn = Columns - 1;
+  public const int MaxRow = Rows - 1;
 
   public BoolEvent OnShowSquareNameChanged;
   public UnityEvent OnReady;
@@ -26,6 +29,8 @@ public class Board : MonoBehaviour {
     }
   }
 
+  public Square this[string squareName] => squares.FirstOrDefault(square => square.name == squareName);
+
   [Header("Tile Settings")]
   [SerializeField] private Palette palette;
   [SerializeField] private GameObject tilePrefab;
@@ -42,6 +47,7 @@ public class Board : MonoBehaviour {
       for (int column = 0; column < Columns; column++) {
         var square = Instantiate(tilePrefab, transform).GetComponent<Square>();
         square.Configure(this, column, row, black);
+        squares.Add(square);
         black = !black;
       }
       black = !black;

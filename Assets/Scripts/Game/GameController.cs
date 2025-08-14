@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
+[RequireComponent(typeof(PieceManager))]
 public class GameController : MonoBehaviour {
   public static GameController Instance => GameObject.FindWithTag("GameController").GetComponent<GameController>();
 
@@ -10,12 +12,16 @@ public class GameController : MonoBehaviour {
 
   public bool IsReady { get; private set; }
 
+  [Header("Game Settings")]
   [SerializeField] private Board board;
+
+  [Header("Audio Settings")]
   [SerializeField] private AudioMixer audioMixer;
   [SerializeField] private string soundVolumeParam = "SoundVolume";
   [SerializeField] private string musicVolumeParam = "MusicVolume";
 
   private Player player;
+  private PieceManager pieceManager;
 
   private void InitVolumePrefs(string key) {
     float volume = 0.5f; // default volume (0..1)
@@ -38,12 +44,9 @@ public class GameController : MonoBehaviour {
     Debug.Log("Game Ready");
   }
 
-  private void CreatePieces() {
-    ReadyUp();
-  }
-
   private void HandleBoardReady() {
-    CreatePieces();
+    pieceManager.Generate(board);
+    ReadyUp();
   }
 
   private void Start() {
@@ -56,5 +59,6 @@ public class GameController : MonoBehaviour {
 
   private void Awake() {
     player = Player.Instance;
+    pieceManager = GetComponent<PieceManager>();
   }
 }
