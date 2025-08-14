@@ -6,6 +6,7 @@ using System.Linq;
 
 [RequireComponent(typeof(GridLayoutGroup))]
 public class Board : MonoBehaviour {
+  [System.Serializable] public class SquareEvent : UnityEvent<Square> { }
   [System.Serializable] public class BoolEvent : UnityEvent<bool> { }
 
   public const int Size = 8;
@@ -14,6 +15,7 @@ public class Board : MonoBehaviour {
   public const int MaxColumn = Columns - 1;
   public const int MaxRow = Rows - 1;
 
+  public SquareEvent OnClicked;
   public BoolEvent OnShowSquareDetailChanged;
   public UnityEvent OnReady;
 
@@ -43,6 +45,10 @@ public class Board : MonoBehaviour {
 
   private readonly List<Square> squares = new();
 
+  private void HandleSquareClicked(Square square) {
+    OnClicked.Invoke(square);
+  }
+
   private void Start() {
     bool isWhite = true;
     for (int row = 0; row < Rows; row++) {
@@ -50,6 +56,7 @@ public class Board : MonoBehaviour {
         var square = Instantiate(tilePrefab, transform).GetComponent<Square>();
         square.Configure(this, column, row, isWhite);
         squares.Add(square);
+        square.OnClicked.AddListener(HandleSquareClicked);
         isWhite = !isWhite;
       }
       isWhite = !isWhite;

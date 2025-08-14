@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8216834119126705587}
   - component: {fileID: 1337198565246068986}
   - component: {fileID: 1253622858488793659}
+  - component: {fileID: 6204835941953191803}
   m_Layer: 5
   m_Name: Pawn
   m_TagString: Untagged
@@ -89,6 +90,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6d262f1d2eb44dbdb66961c6025f893, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []
   type: 1
 --- !u!114 &1253622858488793659
 MonoBehaviour:
@@ -105,3 +109,32 @@ MonoBehaviour:
   m_EffectColor: {r: 0.101960786, g: 0.12156863, b: 0.11764706, a: 1}
   m_EffectDistance: {x: 2, y: -2}
   m_UseGraphicAlpha: 1
+--- !u!114 &6204835941953191803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7931701963918660786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates:
+  - eventID: 4
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1337198565246068986}
+          m_TargetAssemblyTypeName: Piece, Assembly-CSharp
+          m_MethodName: Click
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2

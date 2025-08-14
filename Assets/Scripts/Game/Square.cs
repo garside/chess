@@ -1,9 +1,12 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
 [RequireComponent(typeof(Image))]
 public class Square : MonoBehaviour {
+  [System.Serializable] public class SquareEvent : UnityEvent<Square> { }
+
   [System.Serializable]
   public class CoverageOverlay {
     public Image player;
@@ -16,6 +19,8 @@ public class Square : MonoBehaviour {
   public static char ColumnChar(int columnIndex) => (char)('a' + columnIndex);
   public static int RowValue(int rowIndex) => rowIndex + 1;
   public static string NameFor(int columnIndex, int rowIndex) => $"{ColumnChar(columnIndex)}{RowValue(rowIndex)}";
+
+  public SquareEvent OnClicked;
 
   public Board Board { get; private set; }
   public bool IsWhite { get; private set; }
@@ -46,9 +51,24 @@ public class Square : MonoBehaviour {
     get => enemyCoverage;
     set {
       enemyCoverage = value;
-      enemyCoverageColor.a = CoverageOpacity[Mathf.Min(enemyCoverage, CoverageLimit)];
-      coverageOverlay.enemy.color = enemyCoverageColor;
+      SyncEnemyCoverageColor();
     }
+  }
+
+  public bool DangerZone {
+    get => dangerZone;
+    set {
+      dangerZone = value;
+      if (dangerZone) {
+        enemyCoverageColor.a = 1f;
+        coverageOverlay.enemy.color = enemyCoverageColor;
+      } else SyncEnemyCoverageColor();
+    }
+  }
+
+  public bool ShowScreen {
+    get => screen.enabled;
+    set => screen.enabled = value;
   }
 
   private Image image;
@@ -56,6 +76,7 @@ public class Square : MonoBehaviour {
   [Header("References")]
   [SerializeField] private TextMeshProUGUI textName;
   [SerializeField] private CoverageOverlay coverageOverlay;
+  [SerializeField] private Image screen;
 
   private Color playerCoverageColor;
   private Color enemyCoverageColor;
@@ -63,6 +84,11 @@ public class Square : MonoBehaviour {
   private int playerCoverage;
   private int enemyCoverage;
   private bool showDetails;
+  private bool dangerZone;
+
+  public void Click() {
+    OnClicked.Invoke(this);
+  }
 
   public Square UpLeft(int spaces = int.MaxValue) {
     int row = Row + spaces;
@@ -114,6 +140,16 @@ public class Square : MonoBehaviour {
     return Board[NameFor(column, Row)];
   }
 
+  public Square Knight(int horizontal, int vertical) {
+    int row = Row - vertical;
+    int column = Column - horizontal;
+    if (row < 0) return null;
+    if (column < 0) return null;
+    if (row > Board.MaxRow) return null;
+    if (column > Board.MaxColumn) return null;
+    return Board[NameFor(column, row)];
+  }
+
   public Square Right(int spaces = int.MaxValue) {
     int column = Column - spaces;
     if (column < 0) return null;
@@ -137,6 +173,12 @@ public class Square : MonoBehaviour {
 
     PlayerCoverage = 0;
     EnemyCoverage = 0;
+    ShowScreen = false;
+  }
+
+  private void SyncEnemyCoverageColor() {
+    enemyCoverageColor.a = CoverageOpacity[Mathf.Min(enemyCoverage, CoverageLimit)];
+    coverageOverlay.enemy.color = enemyCoverageColor;
   }
 
   private void Awake() {

@@ -11,6 +11,11 @@ public class GameController : MonoBehaviour {
   public UnityEvent OnEnded;
 
   public bool IsReady { get; private set; }
+  public bool IsOver { get; private set; }
+  public bool IsRunning => IsReady && !IsOver;
+
+  public Board Board => board;
+  public PieceManager PieceManager => pieceManager;
 
   [Header("Game Settings")]
   [SerializeField] private Board board;
@@ -20,7 +25,7 @@ public class GameController : MonoBehaviour {
   [SerializeField] private string soundVolumeParam = "SoundVolume";
   [SerializeField] private string musicVolumeParam = "MusicVolume";
 
-  private Player player;
+  //private Player player;
   private PieceManager pieceManager;
 
   private void InitVolumePrefs(string key) {
@@ -45,7 +50,7 @@ public class GameController : MonoBehaviour {
   }
 
   private void HandleBoardReady() {
-    pieceManager.Generate(board, true);
+    pieceManager.Generate(board);
     ReadyUp();
   }
 
@@ -58,7 +63,6 @@ public class GameController : MonoBehaviour {
   }
 
   private void Awake() {
-    player = Player.Instance;
     pieceManager = GetComponent<PieceManager>();
   }
 }

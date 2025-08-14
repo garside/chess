@@ -1,8 +1,11 @@
 using UnityEngine;
+using UnityEngine.Events;
 using System.Collections.Generic;
 using System.Linq;
 
 public class PieceManager : MonoBehaviour {
+  [System.Serializable] public class PieceEvent : UnityEvent<Piece> { }
+
   [System.Serializable]
   public class PiecePrefabs {
     public GameObject pawn;
@@ -14,7 +17,14 @@ public class PieceManager : MonoBehaviour {
   }
 
   [System.Serializable]
-  private class Move {
+  public class Move {
+    public enum MoveType {
+      Invalid,
+      Allowed,
+      Opposed,
+      Guarded,
+    }
+
     public Piece Piece;
     public Square Square;
     public MoveType Type;
@@ -26,15 +36,6 @@ public class PieceManager : MonoBehaviour {
     }
   }
 
-  private enum MoveType {
-    Invalid,
-    Allowed,
-    Opposed,
-    Guarded,
-  }
-
-  public bool PlayerIsWhite { get; private set; }
-
   [SerializeField] private PiecePrefabs piecePrefabs;
   [SerializeField] private Palette palette;
 
@@ -42,12 +43,15 @@ public class PieceManager : MonoBehaviour {
   private readonly HashSet<Piece> moved = new();
   private readonly List<Move> moves = new();
 
+  public PieceEvent OnClick;
+
   private Board board;
+  private Player player;
 
   public Piece this[Square square] => pieces.FirstOrDefault(piece => piece.Square == square);
+  public Move[] this[Piece piece] => moves.Where(move => move.Piece == piece).ToArray();
 
-  public void Generate(Board board, bool playerIsWhite) {
-    PlayerIsWhite = playerIsWhite;
+  public void Generate(Board board) {
     this.board = board;
 
     CreateWhitePieces();
@@ -76,6 +80,8 @@ public class PieceManager : MonoBehaviour {
     piece.Color = isWhite ? palette.White : palette.Black;
     piece.Outline = isWhite ? palette.Black : palette.White;
     pieces.Add(piece);
+
+    piece.OnClick.AddListener(HandlePieceClicked);
   }
 
   private void CreateWhitePieces() {
@@ -139,14 +145,14 @@ public class PieceManager : MonoBehaviour {
     }
   }
 
-  private MoveType AddMove(Piece piece, Square square) {
-    if (square == null) return MoveType.Invalid;
+  private Move.MoveType AddMove(Piece piece, Square square) {
+    if (square == null) return Move.MoveType.Invalid;
 
-    var moveType = MoveType.Allowed;
+    var moveType = Move.MoveType.Allowed;
 
     var pieceOnSquare = this[square];
     if (pieceOnSquare != null) {
-      moveType = pieceOnSquare.IsWhite == piece.IsWhite ? MoveType.Guarded : MoveType.Opposed;
+      moveType = pieceOnSquare.IsWhite == piece.IsWhite ? Move.MoveType.Guarded : Move.MoveType.Opposed;
     }
 
     Move move = new(piece, square, moveType);
@@ -156,47 +162,58 @@ public class PieceManager : MonoBehaviour {
   }
 
   private void CalculatePawnMoves(Piece piece) {
-    if (AddMove(piece, piece.IsWhite ? piece.Square.Up(1) : piece.Square.Down(1)) == MoveType.Allowed) {
+    if (AddMove(piece, piece.IsWhite ? piece.Square.Up(1) : piece.Square.Down(1)) == Move.MoveType.Allowed) {
       if (!moved.Contains(piece)) AddMove(piece, piece.IsWhite ? piece.Square.Up(2) : piece.Square.Down(2));
     }
+    // todo: capturing
+    // todo: en passant (fuck you)
+    // todo: promotions
   }
 
   private void CalculateRookMoves(Piece piece) {
     for (int up = 1; up < Board.Size; up++) {
-      if (AddMove(piece, piece.Square.Up(up)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.Up(up)) != Move.MoveType.Allowed) break;
     }
 
     for (int down = 1; down < Board.Size; down++) {
-      if (AddMove(piece, piece.Square.Down(down)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.Down(down)) != Move.MoveType.Allowed) break;
     }
 
     for (int left = 1; left < Board.Size; left++) {
-      if (AddMove(piece, piece.Square.Left(left)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.Left(left)) != Move.MoveType.Allowed) break;
     }
 
     for (int right = 1; right < Board.Size; right++) {
-      if (AddMove(piece, piece.Square.Right(right)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.Right(right)) != Move.MoveType.Allowed) break;
     }
   }
 
   private void CalculateKnightMoves(Piece piece) {
+    AddMove(piece, piece.Square.Knight(2, 1));
+    AddMove(piece, piece.Square.Knight(-2, 1));
+    AddMove(piece, piece.Square.Knight(2, -1));
+    AddMove(piece, piece.Square.Knight(-2, -1));
+    AddMove(piece, piece.Square.Knight(1, 2));
+    AddMove(piece, piece.Square.Knight(1, -2));
+    AddMove(piece, piece.Square.Knight(-1, 2));
+    AddMove(piece, piece.Square.Knight(-1, -2));
   }
 
   private void CalculateBishopMoves(Piece piece) {
     for (int ul = 1; ul < Board.Size; ul++) {
-      if (AddMove(piece, piece.Square.UpLeft(ul)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.UpLeft(ul)) != Move.MoveType.Allowed) break;
     }
 
     for (int ur = 1; ur < Board.Size; ur++) {
-      if (AddMove(piece, piece.Square.UpRight(ur)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.UpRight(ur)) != Move.MoveType.Allowed) break;
     }
 
     for (int dl = 1; dl < Board.Size; dl++) {
-      if (AddMove(piece, piece.Square.DownLeft(dl)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.DownLeft(dl)) != Move.MoveType.Allowed) break;
     }
 
     for (int dr = 1; dr < Board.Size; dr++) {
-      if (AddMove(piece, piece.Square.DownRight(dr)) != MoveType.Allowed) break;
+      if (AddMove(piece, piece.Square.DownRight(dr)) != Move.MoveType.Allowed) break;
     }
   }
 
@@ -221,7 +238,16 @@ public class PieceManager : MonoBehaviour {
     var white = coverage.Count(move => move.Piece.IsWhite);
     var black = coverage.Count(move => !move.Piece.IsWhite);
 
-    square.PlayerCoverage = PlayerIsWhite ? white : black;
-    square.EnemyCoverage = PlayerIsWhite ? black : white;
+    square.PlayerCoverage = player.IsWhite ? white : black;
+    square.EnemyCoverage = player.IsWhite ? black : white;
+  }
+
+  private void HandlePieceClicked(Piece piece) {
+    OnClick.Invoke(piece);
+    player.Click(piece);
+  }
+
+  private void Awake() {
+    player = GameObject.FindWithTag("Player").GetComponent<Player>();
   }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,8 @@ using System.Linq;
 [RequireComponent(typeof(Image))]
 [RequireComponent(typeof(Outline))]
 public class Piece : MonoBehaviour {
+  [System.Serializable] public class PieceEvent : UnityEvent<Piece> { }
+
   public enum PieceType {
     Undefined,
     Pawn,
@@ -15,6 +18,8 @@ public class Piece : MonoBehaviour {
     Queen,
     King,
   }
+
+  public PieceEvent OnClick;
 
   public PieceType Type => type;
 
@@ -51,6 +56,10 @@ public class Piece : MonoBehaviour {
   private bool? isWhite;
   private Image image;
   private Outline outline;
+
+  public void Click() {
+    OnClick.Invoke(this);
+  }
 
   private void Awake() {
     image = GetComponent<Image>();
