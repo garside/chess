@@ -64,7 +64,14 @@ public class PieceManager : MonoBehaviour {
   public bool IsValidMove(Piece piece, Square square) => moves.Any(move => move.Piece == piece && move.Square == square);
   public void MakeMove(Piece piece, Square square) => Make(moves.First(move => move.Piece == piece && move.Square == square));
   public void Make(Move move) {
-    Debug.Log("MOVE!");
+    switch (move.Type) {
+      case Move.MoveType.Allowed:
+        move.Piece.Square = move.Square;
+        break;
+      default:
+        throw new System.NotImplementedException(string.Format("{0} is not a valid move type", move.Type));
+    }
+
     OnPieceMoved.Invoke(move);
   }
 
