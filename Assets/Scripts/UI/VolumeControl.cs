@@ -17,10 +17,8 @@ public class VolumeControl : MonoBehaviour {
 
   [Header("Settings")]
   [SerializeField] private bool saveToPlayerPrefs = true;
-  [SerializeField] private string prefsKey = "master_volume"; // 0..1 linear
-  [SerializeField, Tooltip("Minimum dB when slider at zero (typical mixer floor).")]
 
-  private bool changing;               // prevents feedback loops when syncing UI
+  private bool changing;                // prevents feedback loops when syncing UI
   private float lastNonZeroVolume = 1f; // 0..1 linear remembered when muting
 
   private void Start() {
@@ -30,8 +28,8 @@ public class VolumeControl : MonoBehaviour {
 
     // Initial restore / default
     float startVol = 1f;
-    if (saveToPlayerPrefs && PlayerPrefs.HasKey(prefsKey))
-      startVol = Mathf.Clamp01(PlayerPrefs.GetFloat(prefsKey));
+    if (saveToPlayerPrefs && PlayerPrefs.HasKey(mixerVolumeParam))
+      startVol = Mathf.Clamp01(PlayerPrefs.GetFloat(mixerVolumeParam));
 
     // Apply to mixer + UI
     changing = true;
@@ -93,7 +91,7 @@ public class VolumeControl : MonoBehaviour {
     float dB = (linear01 <= 0.0001f) ? minDb : Mathf.Log10(linear01) * 20f;
     audioMixer.SetFloat(mixerVolumeParam, dB);
 
-    if (saveToPlayerPrefs) PlayerPrefs.SetFloat(prefsKey, linear01);
+    if (saveToPlayerPrefs) PlayerPrefs.SetFloat(mixerVolumeParam, linear01);
 
     // Manage AudioSource audibility
     if (audioSource) {
