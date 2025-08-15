@@ -16,6 +16,7 @@ public class Board : MonoBehaviour {
   public const int MaxRow = Rows - 1;
 
   public SquareEvent OnClicked;
+  public SquareEvent OnDropped;
   public BoolEvent OnShowSquareDetailChanged;
   public UnityEvent OnReady;
 
@@ -49,6 +50,10 @@ public class Board : MonoBehaviour {
     OnClicked.Invoke(square);
   }
 
+  private void HandleSquareDropped(Square square) {
+    OnDropped.Invoke(square);
+  }
+
   private void Start() {
     bool isWhite = true;
     for (int row = 0; row < Rows; row++) {
@@ -57,6 +62,7 @@ public class Board : MonoBehaviour {
         square.Configure(this, column, row, isWhite);
         squares.Add(square);
         square.OnClicked.AddListener(HandleSquareClicked);
+        square.OnDropped.AddListener(HandleSquareDropped);
         isWhite = !isWhite;
       }
       isWhite = !isWhite;

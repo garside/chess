@@ -5,14 +5,18 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(PieceManager))]
 public class GameController : MonoBehaviour {
+  [System.Serializable] public class MoveEvent : UnityEvent<PieceManager.Move> { }
+
   public static GameController Instance => GameObject.FindWithTag("GameController").GetComponent<GameController>();
 
   public UnityEvent OnReady;
   public UnityEvent OnEnded;
+  public MoveEvent OnPieceMoved;
 
   public bool IsReady { get; private set; }
   public bool IsOver { get; private set; }
   public bool IsRunning => IsReady && !IsOver;
+  public bool WhiteToMove { get; private set; }
 
   public Board Board => board;
   public PieceManager PieceManager => pieceManager;
@@ -25,7 +29,6 @@ public class GameController : MonoBehaviour {
   [SerializeField] private string soundVolumeParam = "SoundVolume";
   [SerializeField] private string musicVolumeParam = "MusicVolume";
 
-  //private Player player;
   private PieceManager pieceManager;
 
   private void InitVolumePrefs(string key) {
@@ -54,15 +57,23 @@ public class GameController : MonoBehaviour {
     ReadyUp();
   }
 
+  private void HandlePieceMoved(PieceManager.Move move) {
+    WhiteToMove = !WhiteToMove;
+    OnPieceMoved.Invoke(move);
+  }
+
   private void Start() {
     InitVolumePrefs(soundVolumeParam);
     InitVolumePrefs(musicVolumeParam);
+
+    pieceManager.OnPieceMoved.AddListener(HandlePieceMoved);
 
     if (board.IsReady) HandleBoardReady();
     else board.OnReady.AddListener(HandleBoardReady);
   }
 
   private void Awake() {
+    WhiteToMove = true;
     pieceManager = GetComponent<PieceManager>();
   }
 }

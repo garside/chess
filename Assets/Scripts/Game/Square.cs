@@ -21,6 +21,7 @@ public class Square : MonoBehaviour {
   public static string NameFor(int columnIndex, int rowIndex) => $"{ColumnChar(columnIndex)}{RowValue(rowIndex)}";
 
   public SquareEvent OnClicked;
+  public SquareEvent OnDropped;
 
   public Board Board { get; private set; }
   public bool IsWhite { get; private set; }
@@ -88,6 +89,10 @@ public class Square : MonoBehaviour {
 
   public void Click() {
     OnClicked.Invoke(this);
+  }
+
+  public void Drop() {
+    OnDropped.Invoke(this);
   }
 
   public Square UpLeft(int spaces = int.MaxValue) {

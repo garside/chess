@@ -5,6 +5,7 @@ using System.Linq;
 
 public class PieceManager : MonoBehaviour {
   [System.Serializable] public class PieceEvent : UnityEvent<Piece> { }
+  [System.Serializable] public class MoveEvent : UnityEvent<Move> { }
 
   [System.Serializable]
   public class PiecePrefabs {
@@ -36,6 +37,19 @@ public class PieceManager : MonoBehaviour {
     }
   }
 
+  public PieceEvent OnClick;
+  public PieceEvent OnDragStarted;
+  public PieceEvent OnDragEnded;
+  public MoveEvent OnPieceMoved;
+
+  public Move[] PlayerMoves => player.IsWhite ? WhiteMoves : BlackMoves;
+  public Move[] OpponentMoves => player.IsWhite ? BlackMoves : WhiteMoves;
+  public Move[] WhiteMoves => moves.Where(move => move.Piece.IsWhite).ToArray();
+  public Move[] BlackMoves => moves.Where(move => !move.Piece.IsWhite).ToArray();
+
+  public Piece this[Square square] => pieces.FirstOrDefault(piece => piece.Square == square);
+  public Move[] this[Piece piece] => moves.Where(move => move.Piece == piece).ToArray();
+
   [SerializeField] private PiecePrefabs piecePrefabs;
   [SerializeField] private Palette palette;
 
@@ -43,13 +57,16 @@ public class PieceManager : MonoBehaviour {
   private readonly HashSet<Piece> moved = new();
   private readonly List<Move> moves = new();
 
-  public PieceEvent OnClick;
-
   private Board board;
   private Player player;
 
-  public Piece this[Square square] => pieces.FirstOrDefault(piece => piece.Square == square);
-  public Move[] this[Piece piece] => moves.Where(move => move.Piece == piece).ToArray();
+  public bool HasAnyMoves(Piece piece) => moves.Any(move => move.Piece == piece && move.Type != Move.MoveType.Guarded);
+  public bool IsValidMove(Piece piece, Square square) => moves.Any(move => move.Piece == piece && move.Square == square);
+  public void MakeMove(Piece piece, Square square) => Make(moves.First(move => move.Piece == piece && move.Square == square));
+  public void Make(Move move) {
+    Debug.Log("MOVE!");
+    OnPieceMoved.Invoke(move);
+  }
 
   public void Generate(Board board) {
     this.board = board;
@@ -82,6 +99,8 @@ public class PieceManager : MonoBehaviour {
     pieces.Add(piece);
 
     piece.OnClick.AddListener(HandlePieceClicked);
+    piece.OnDragStart.AddListener(HandlePieceDragStarted);
+    piece.OnDragEnd.AddListener(HandlePieceDragEnded);
   }
 
   private void CreateWhitePieces() {
@@ -240,6 +259,16 @@ public class PieceManager : MonoBehaviour {
 
     square.PlayerCoverage = player.IsWhite ? white : black;
     square.EnemyCoverage = player.IsWhite ? black : white;
+  }
+
+  private void HandlePieceDragEnded(Piece piece) {
+    OnDragEnded.Invoke(piece);
+    player.DragEnd(piece);
+  }
+
+  private void HandlePieceDragStarted(Piece piece) {
+    OnDragStarted.Invoke(piece);
+    player.DragStart(piece);
   }
 
   private void HandlePieceClicked(Piece piece) {

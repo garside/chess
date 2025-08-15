@@ -20,8 +20,12 @@ public class Piece : MonoBehaviour {
   }
 
   public PieceEvent OnClick;
+  public PieceEvent OnDragStart;
+  public PieceEvent OnDragEnd;
 
   public PieceType Type => type;
+
+  public Sprite Sprite => image.sprite;
 
   public Color Color {
     get => image.color;
@@ -50,6 +54,11 @@ public class Piece : MonoBehaviour {
     }
   }
 
+  public bool IsVisible {
+    get => image.enabled;
+    set => image.enabled = value; 
+  }
+
   [SerializeField] private PieceType type;
 
   private Square square;
@@ -59,6 +68,14 @@ public class Piece : MonoBehaviour {
 
   public void Click() {
     OnClick.Invoke(this);
+  }
+
+  public void DragStart() {
+    OnDragStart.Invoke(this);
+  }
+
+  public void DragEnd() {
+    OnDragEnd.Invoke(this);
   }
 
   private void Awake() {

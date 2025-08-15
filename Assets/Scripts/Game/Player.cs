@@ -17,10 +17,52 @@ public class Player : MonoBehaviour {
   [SerializeField] private bool isWhite;
   [SerializeField] private Color selected;
 
+  [Header("Audio")]
+  [SerializeField] private AudioSource moveBad;
+  [SerializeField] private AudioSource moveAbort;
+
+  [Header("References")]
+  [SerializeField] private DragPiece dragPiece;
+
   private Color? original;
   private GameController gameController;
 
+  public bool IsPlayerTurn => IsWhite ? gameController.WhiteToMove : !gameController.WhiteToMove;
+
+  public void DragEnd(Piece piece) {
+    if (Selected != piece) return;
+    piece.IsVisible = true;
+    dragPiece.IsVisible = false;
+    Clear();
+    moveAbort.Play();
+  }
+
+  public void DragStart(Piece piece) {
+    if (!IsPlayerTurn) {
+      moveBad.Play();
+      return;
+    }
+
+    bool isOwn = piece.IsWhite == IsWhite;
+    if (isOwn && gameController.PieceManager.HasAnyMoves(piece)) {
+      piece.IsVisible = false;
+      dragPiece.Sprite = piece.Sprite;
+      dragPiece.Outline = piece.Outline;
+      dragPiece.IsVisible = true;
+      Select(piece);
+    } else moveBad.Play();
+  }
+
   public void Click(Piece piece) {
+    if (!IsPlayerTurn) {
+      moveBad.Play();
+      return;
+    }
+
+    Select(piece);
+  }
+
+  private void Select(Piece piece) {
     bool clearOnly = Selected == piece;
     Clear();
     if (clearOnly) return;
@@ -54,12 +96,27 @@ public class Player : MonoBehaviour {
     }
   }
 
+  private void MoveSelectedTo(Square square) {
+    if (gameController.PieceManager.IsValidMove(Selected, square)) {
+      var piece = Selected;
+      Clear();
+      gameController.PieceManager.MakeMove(piece, square);
+    }
+  }
+
   private void HandleSquareClicked(Square square) {
-    Debug.Log(square);
+    MoveSelectedTo(square);
+  }
+
+  private void HandleSquareDropped(Square square) {
+    if (Selected != null) Selected.IsVisible = true;
+    dragPiece.IsVisible = false;
+    MoveSelectedTo(square);
   }
 
   private void Start() {
     gameController.Board.OnClicked.AddListener(HandleSquareClicked);
+    gameController.Board.OnDropped.AddListener(HandleSquareDropped);
   }
 
   private void Awake() {

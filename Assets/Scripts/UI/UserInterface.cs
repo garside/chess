@@ -5,16 +5,32 @@ public class UserInterface : MonoBehaviour {
 
   [Header("References")]
   [SerializeField] private GameObject loadingScreen;
+  [SerializeField] private GameObject opponentTurn;
+  [SerializeField] private GameObject playerTurn;
 
   private Player player;
   private GameController gameController;
 
+  private void SyncTurn() {
+    bool isPlayerTurn = player.IsWhite ? gameController.WhiteToMove : !gameController.WhiteToMove;
+    opponentTurn.SetActive(!isPlayerTurn);
+    playerTurn.SetActive(isPlayerTurn);
+  }
+
   private void HandleGameReady() {
+    SyncTurn();
     loadingScreen.SetActive(false);
   }
 
+  private void HandlePieceMoved(PieceManager.Move move) {
+    SyncTurn();
+  }
+
   private void Start() {
-    gameController.OnReady.AddListener(HandleGameReady);
+    gameController.OnPieceMoved.AddListener(HandlePieceMoved);
+
+    if (gameController.IsReady) HandleGameReady();
+    else gameController.OnReady.AddListener(HandleGameReady);
   }
 
   private void Awake() {
