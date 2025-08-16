@@ -9,6 +9,12 @@ using System.Linq;
 public class MoveManager : MonoBehaviour {
   #region Constants
 
+  private static Vector2Int[] kingMovements = new Vector2Int[] {
+    new(-1, 1),  new(0, 1),  new(1, 1),
+    new(-1, 0),              new(1, 0),
+    new(-1, -1), new(0, -1), new(1, -1),
+  };
+
   private static Vector2Int[] knightMovements = new Vector2Int[] {
     new(1, 2), new(1, -2), new(-1, 2), new(-1, -2),
     new(2, 1), new(2, -1), new(-2, 1), new(-2, -1),
@@ -88,6 +94,8 @@ public class MoveManager : MonoBehaviour {
   private void AddPawnMoves(Piece pawn) {
     Assert.IsTrue(pawn.PieceType == PieceType.Pawn);
 
+    // todo: captures
+
     var from = pawn.Square;
     var to = boardManager[from.Rank + (pawn.IsWhite ? 1 : -1), from.File];
     if (to == null || pieceManager.AnyOn(to)) return;
@@ -109,27 +117,72 @@ public class MoveManager : MonoBehaviour {
       var to = boardManager[from.Rank + movement.x, from.File + movement.y];
       if (to == null) continue;
 
-      var piece = pieceManager[to];
-      if (piece != null && piece.IsWhite == knight.IsWhite) continue;
+      var on = pieceManager[to];
+      if (on != null && on.IsWhite == knight.IsWhite) continue;
 
-      moves.Add(new(knight, to));
+      moves.Add(new(knight, to, on == null ? MoveFlags.None : MoveFlags.Capture));
     }
   }
 
-  private void AddBishopMoves(Piece pawn) {
-    Assert.IsTrue(pawn.PieceType == PieceType.Bishop);
+  private void AddBishopMoves(Piece bishop) {
+    Assert.IsTrue(bishop.PieceType == PieceType.Bishop);
+
+    AddMovementRay(bishop, 1, 1);
+    AddMovementRay(bishop, 1, -1);
+    AddMovementRay(bishop, -1, 1);
+    AddMovementRay(bishop, -1, -1);
   }
 
-  private void AddRookMoves(Piece pawn) {
-    Assert.IsTrue(pawn.PieceType == PieceType.Rook);
+  private void AddRookMoves(Piece rook) {
+    Assert.IsTrue(rook.PieceType == PieceType.Rook);
+
+    AddMovementRay(rook, 1, 0);
+    AddMovementRay(rook, -1, 0);
+    AddMovementRay(rook, 0, 1);
+    AddMovementRay(rook, 0, -1);
   }
 
-  private void AddQueenMoves(Piece pawn) {
-    Assert.IsTrue(pawn.PieceType == PieceType.Queen);
+  private void AddQueenMoves(Piece queen) {
+    Assert.IsTrue(queen.PieceType == PieceType.Queen);
+
+    AddMovementRay(queen, 1, 1);
+    AddMovementRay(queen, 1, -1);
+    AddMovementRay(queen, -1, 1);
+    AddMovementRay(queen, -1, -1);
+    AddMovementRay(queen, 1, 0);
+    AddMovementRay(queen, -1, 0);
+    AddMovementRay(queen, 0, 1);
+    AddMovementRay(queen, 0, -1);
   }
 
-  private void AddKingMoves(Piece pawn) {
-    Assert.IsTrue(pawn.PieceType == PieceType.King);
+  private void AddMovementRay(Piece piece, int rankDirection, int fileDirection) {
+    var from = piece.Square;
+    for (int i = 1; i < Board.Dimension; i++) {
+      var to = boardManager[from.Rank + i * rankDirection, from.File + i * fileDirection];
+      if (to == null) break;
+
+      var on = pieceManager[to];
+      if (on == null) moves.Add(new(piece, to));
+      else {
+        if (on.IsWhite != piece.IsWhite) moves.Add(new(piece, to, MoveFlags.Capture));
+        break;
+      }
+    }
+  }
+
+  private void AddKingMoves(Piece king) {
+    Assert.IsTrue(king.PieceType == PieceType.King);
+
+    var from = king.Square;
+    foreach (var movement in kingMovements) {
+      var to = boardManager[from.Rank + movement.x, from.File + movement.y];
+      if (to == null) continue;
+
+      var on = pieceManager[to];
+      if (on != null && on.IsWhite == king.IsWhite) continue;
+
+      moves.Add(new(king, to, on == null ? MoveFlags.None : MoveFlags.Capture));
+    }
   }
 
   #endregion

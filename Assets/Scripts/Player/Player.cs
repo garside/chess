@@ -200,6 +200,7 @@ public class Player : MonoBehaviour {
   }
 
   private void HandleSquareExited(Square square) {
+    if (Dragging == null) return;
     square.BorderVisible = false;
   }
 
