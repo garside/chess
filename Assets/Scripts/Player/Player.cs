@@ -19,6 +19,8 @@ public class Player : MonoBehaviour {
   public class MoveAudio {
     public AudioSource bad;
     public AudioSource click;
+    public AudioSource highlight;
+    public AudioSource none;
     public AudioSource pickup;
     public AudioSource place;
     public AudioSource reset;
@@ -72,15 +74,23 @@ public class Player : MonoBehaviour {
     Dragging.ResetOutlineColor();
     Dragging.ReparentToSquare();
     Dragging = null;
-    foreach (var square in gameController.BoardManager.Squares) square.ScreenVisible = false;
+    foreach (var square in gameController.BoardManager.Squares) {
+      square.ScreenVisible = false;
+      square.BorderVisible = false;
+    }
   }
 
   private void Click(Piece piece) {
-    bool onlyClear = piece == null || piece == Clicked || !gameController.MoveManager.HasAny(piece);
+    bool onlyClear = piece == null || piece == Clicked;
     ClearClicked();
     if (onlyClear) {
       moveAudio.tap.Play();
     } else {
+      if (!gameController.MoveManager.HasAny(piece)) {
+        moveAudio.none.Play();
+        return;
+      }
+
       moveAudio.click.Play();
       Outline(piece);
       Clicked = piece;
@@ -98,6 +108,11 @@ public class Player : MonoBehaviour {
     else {
       if (piece.IsWhite != IsWhite) {
         moveAudio.bad.Play();
+        return;
+      }
+
+      if (!gameController.MoveManager.HasAny(piece)) {
+        moveAudio.none.Play();
         return;
       }
 
@@ -177,11 +192,15 @@ public class Player : MonoBehaviour {
   }
 
   private void HandleSquareEntered(Square square) {
-    Debug.LogFormat("[Player] HandleSquareEntered {0}", square.name);
+    if (Dragging == null) return;
+
+    square.BorderVisible = gameController.MoveManager.IsValid(Dragging, square);
+    square.BorderColor = PlayerHighlight;
+    if (square.BorderVisible) moveAudio.highlight.Play();
   }
 
   private void HandleSquareExited(Square square) {
-    Debug.LogFormat("[Player] HandleSquareExited {0}", square.name);
+    square.BorderVisible = false;
   }
 
   #endregion

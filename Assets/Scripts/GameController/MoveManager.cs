@@ -9,6 +9,11 @@ using System.Linq;
 public class MoveManager : MonoBehaviour {
   #region Constants
 
+  private static Vector2Int[] knightMovements = new Vector2Int[] {
+    new(1, 2), new(1, -2), new(-1, 2), new(-1, -2),
+    new(2, 1), new(2, -1), new(-2, 1), new(-2, -1),
+  };
+
   #endregion
 
   #region Internal
@@ -96,8 +101,19 @@ public class MoveManager : MonoBehaviour {
     moves.Add(new(pawn, push, MoveFlags.DoublePush));
   }
 
-  private void AddKnightMoves(Piece pawn) {
-    Assert.IsTrue(pawn.PieceType == PieceType.Knight);
+  private void AddKnightMoves(Piece knight) {
+    Assert.IsTrue(knight.PieceType == PieceType.Knight);
+
+    var from = knight.Square;
+    foreach (var movement in knightMovements) {
+      var to = boardManager[from.Rank + movement.x, from.File + movement.y];
+      if (to == null) continue;
+
+      var piece = pieceManager[to];
+      if (piece != null && piece.IsWhite == knight.IsWhite) continue;
+
+      moves.Add(new(knight, to));
+    }
   }
 
   private void AddBishopMoves(Piece pawn) {

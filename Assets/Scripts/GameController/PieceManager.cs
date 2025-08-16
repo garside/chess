@@ -67,10 +67,14 @@ public class PieceManager : MonoBehaviour {
 
   private void SpawnWhite() {
     SpawnPawns(whitePrefabs.Pawn, 1);
+    Spawn(whitePrefabs.Knight, boardManager[0, 1]);
+    Spawn(whitePrefabs.Knight, boardManager[0, 6]);
   }
 
   private void SpawnBlack() {
     SpawnPawns(blackPrefabs.Pawn, 6);
+    Spawn(blackPrefabs.Knight, boardManager[7, 1]);
+    Spawn(blackPrefabs.Knight, boardManager[7, 6]);
   }
 
   #endregion
