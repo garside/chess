@@ -45,20 +45,32 @@ public class PieceManager : MonoBehaviour {
 
   public bool IsReady { get; private set; }
 
+  public Piece[] Pieces => pieces.ToArray();
+
   public Piece this[Square square] => pieces.FirstOrDefault(piece => piece.Square == square);
 
   #endregion
 
   #region Methods
 
-  private void SpawnPawns(GameObject prefab, int rank) {
-    for (int file = 0; file < 8; file++) Spawn(prefab, boardManager[rank, file]);
-  }
+  public bool AnyOn(Square square) => this[square] != null;
 
   private void Spawn(GameObject prefab, Square square) {
     var piece = Instantiate(prefab).GetComponent<Piece>();
     piece.Square = square;
     pieces.Add(piece);
+  }
+
+  private void SpawnPawns(GameObject prefab, int rank) {
+    for (int file = 0; file < 8; file++) Spawn(prefab, boardManager[rank, file]);
+  }
+
+  private void SpawnWhite() {
+    SpawnPawns(whitePrefabs.Pawn, 1);
+  }
+
+  private void SpawnBlack() {
+    SpawnPawns(blackPrefabs.Pawn, 6);
   }
 
   #endregion
@@ -70,9 +82,12 @@ public class PieceManager : MonoBehaviour {
   #region Handlers
 
   private void HandleBoardReady() {
-    SpawnPawns(whitePrefabs.Pawn, 1);
+    if (IsReady) return;
 
-    SpawnPawns(blackPrefabs.Pawn, 6);
+    SpawnWhite();
+    SpawnBlack();
+    IsReady = true;
+    OnReady.Invoke();
   }
 
   #endregion

@@ -7,9 +7,9 @@ public class Player : MonoBehaviour {
 
   public static Player Instance => GameObject.FindWithTag("Player").GetComponent<Player>();
 
-  public static Color OpponentOutline => Color.red;
+  public static Color OpponentHighlight => Color.red;
 
-  public static Color PlayerOutline => Color.green;
+  public static Color PlayerHighlight => Color.yellow;
 
   #endregion
 
@@ -64,6 +64,7 @@ public class Player : MonoBehaviour {
     if (Clicked == null) return;
     Clicked.ResetOutlineColor();
     Clicked = null;
+    foreach (var square in gameController.BoardManager.Squares) square.BorderVisible = false;
   }
 
   private void ClearDragging() {
@@ -71,10 +72,11 @@ public class Player : MonoBehaviour {
     Dragging.ResetOutlineColor();
     Dragging.ReparentToSquare();
     Dragging = null;
+    foreach (var square in gameController.BoardManager.Squares) square.ScreenVisible = false;
   }
 
   private void Click(Piece piece) {
-    bool onlyClear = piece == null || piece == Clicked;
+    bool onlyClear = piece == null || piece == Clicked || !gameController.MoveManager.HasAny(piece);
     ClearClicked();
     if (onlyClear) {
       moveAudio.tap.Play();
@@ -82,6 +84,11 @@ public class Player : MonoBehaviour {
       moveAudio.click.Play();
       Outline(piece);
       Clicked = piece;
+
+      foreach (var square in gameController.BoardManager.Squares) {
+        square.BorderVisible = gameController.MoveManager.IsValid(Clicked, square);
+        square.BorderColor = piece.IsWhite == IsWhite ? PlayerHighlight : OpponentHighlight;
+      }
     }
   }
 
@@ -98,6 +105,8 @@ public class Player : MonoBehaviour {
       piece.ReparentTo(dragHarness.transform);
       Outline(piece);
       Dragging = piece;
+
+      foreach (var square in gameController.BoardManager.Squares) square.ScreenVisible = !gameController.MoveManager.IsValid(Dragging, square);
     }
   }
 
@@ -119,7 +128,7 @@ public class Player : MonoBehaviour {
 
   private void ClickToMove(Square square) {
     if (Clicked == null) return;
-    if (!gameController.MoveManager.IsValid(Clicked, square)) {
+    if (Clicked.IsWhite != IsWhite || !gameController.MoveManager.IsValid(Clicked, square)) {
       var currentPiece = gameController.PieceManager[square];
       if (currentPiece == null) {
         ClearClicked();
@@ -135,7 +144,7 @@ public class Player : MonoBehaviour {
   }
 
   private void Outline(Piece piece) {
-    piece.OutlineColor = piece.IsWhite == IsWhite ? PlayerOutline : OpponentOutline;
+    piece.OutlineColor = piece.IsWhite == IsWhite ? PlayerHighlight : OpponentHighlight;
   }
 
   #endregion

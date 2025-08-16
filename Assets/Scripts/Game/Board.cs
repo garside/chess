@@ -50,7 +50,14 @@ public class Board : MonoBehaviour {
 
   public Square this[int index] => squares[index];
 
-  public Square this[int rank, int file] => this[rank * 8 + file];
+  public Square this[int rank, int file] {
+    get {
+      if (rank < 0 || file < 0) return null;
+      if (rank >= Dimension || file >= Dimension) return null;
+
+      return this[rank * 8 + file];
+    }
+  }
 
   #endregion
 
