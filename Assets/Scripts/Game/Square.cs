@@ -62,6 +62,11 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IE
 
   public int File => Index % 8;
 
+  public Color BorderColor {
+    get => overlays.border.color;
+    set => overlays.border.color = value;
+  }
+
   public bool BorderVisible {
     get => overlays.border.enabled;
     set => overlays.border.enabled = value;

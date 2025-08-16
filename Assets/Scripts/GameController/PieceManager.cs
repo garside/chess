@@ -51,6 +51,16 @@ public class PieceManager : MonoBehaviour {
 
   #region Methods
 
+  private void SpawnPawns(GameObject prefab, int rank) {
+    for (int file = 0; file < 8; file++) Spawn(prefab, boardManager[rank, file]);
+  }
+
+  private void Spawn(GameObject prefab, Square square) {
+    var piece = Instantiate(prefab).GetComponent<Piece>();
+    piece.Square = square;
+    pieces.Add(piece);
+  }
+
   #endregion
 
   #region Coroutines
@@ -63,16 +73,6 @@ public class PieceManager : MonoBehaviour {
     SpawnPawns(whitePrefabs.Pawn, 1);
 
     SpawnPawns(blackPrefabs.Pawn, 6);
-  }
-
-  private void SpawnPawns(GameObject prefab, int rank) {
-    for (int file = 0; file < 8; file++) Spawn(prefab, boardManager[rank, file]);
-  }
-
-  private void Spawn(GameObject prefab, Square square) {
-    var piece = Instantiate(prefab).GetComponent<Piece>();
-    piece.Square = square;
-    pieces.Add(piece);
   }
 
   #endregion

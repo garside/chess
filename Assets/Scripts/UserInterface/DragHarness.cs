@@ -12,6 +12,8 @@ public class DragHarness : MonoBehaviour {
 
   #region Fields
 
+  private Piece dragging;
+
   #endregion
 
   #region Events
@@ -19,6 +21,13 @@ public class DragHarness : MonoBehaviour {
   #endregion
 
   #region Properties
+
+  public Piece Dragging {
+    get => dragging;
+    set {
+      
+    }
+  }
 
   #endregion
 

@@ -7,20 +7,32 @@ public class Player : MonoBehaviour {
 
   public static Player Instance => GameObject.FindWithTag("Player").GetComponent<Player>();
 
+  public static Color OpponentOutline => Color.red;
+
+  public static Color PlayerOutline => Color.green;
+
   #endregion
 
   #region Internal
+
+  [System.Serializable]
+  public class MoveAudio {
+    public AudioSource bad;
+    public AudioSource click;
+    public AudioSource pickup;
+    public AudioSource place;
+    public AudioSource reset;
+    public AudioSource swoosh;
+    public AudioSource tap;
+  }
 
   #endregion
 
   #region Fields
 
   [Header("Settings")]
+  [SerializeField] private MoveAudio moveAudio;
   [SerializeField] private bool isWhite;
-
-  [Header("Audio")]
-  [SerializeField] private AudioSource moveBad;
-  [SerializeField] private AudioSource moveAbort;
 
   [Header("References")]
   [SerializeField] private DragHarness dragHarness;
@@ -35,11 +47,96 @@ public class Player : MonoBehaviour {
 
   #region Properties
 
-  public bool IsWhite => isWhite;
+  public Piece Clicked { get; private set; }
+
+  public Piece Dragging { get; private set; }
+
+  public bool IsWhite {
+    get => isWhite;
+    set => isWhite = value;
+  }
 
   #endregion
 
   #region Methods
+
+  private void ClearClicked() {
+    if (Clicked == null) return;
+    Clicked.ResetOutlineColor();
+    Clicked = null;
+  }
+
+  private void ClearDragging() {
+    if (Dragging == null) return;
+    Dragging.ResetOutlineColor();
+    Dragging.ReparentToSquare();
+    Dragging = null;
+  }
+
+  private void Click(Piece piece) {
+    bool onlyClear = piece == null || piece == Clicked;
+    ClearClicked();
+    if (onlyClear) {
+      moveAudio.tap.Play();
+    } else {
+      moveAudio.click.Play();
+      Outline(piece);
+      Clicked = piece;
+    }
+  }
+
+  private void BeginDrag(Piece piece) {
+    ClearClicked();
+    if (piece == null) moveAudio.tap.Play();
+    else {
+      if (piece.IsWhite != IsWhite) {
+        moveAudio.bad.Play();
+        return;
+      }
+
+      moveAudio.pickup.Play();
+      piece.ReparentTo(dragHarness.transform);
+      Outline(piece);
+      Dragging = piece;
+    }
+  }
+
+  private void EndDrag(Piece piece) {
+    if (Dragging != piece) return;
+    moveAudio.reset.Play();
+    ClearDragging();
+  }
+
+  private void DropOnto(Square square) {
+    if (Dragging == null) return;
+    if (!gameController.MoveManager.IsValid(Dragging, square)) return;
+
+    var piece = Dragging;
+    ClearDragging();
+    gameController.MoveManager.Move(piece, square);
+    moveAudio.place.Play();
+  }
+
+  private void ClickToMove(Square square) {
+    if (Clicked == null) return;
+    if (!gameController.MoveManager.IsValid(Clicked, square)) {
+      var currentPiece = gameController.PieceManager[square];
+      if (currentPiece == null) {
+        ClearClicked();
+        moveAudio.bad.Play();
+      } else Click(currentPiece);
+      return;
+    }
+
+    var piece = Clicked;
+    ClearClicked();
+    gameController.MoveManager.Move(piece, square);
+    moveAudio.swoosh.Play();
+  }
+
+  private void Outline(Piece piece) {
+    piece.OutlineColor = piece.IsWhite == IsWhite ? PlayerOutline : OpponentOutline;
+  }
 
   #endregion
 
@@ -54,19 +151,20 @@ public class Player : MonoBehaviour {
   }
 
   private void HandleSquareClicked(Square square) {
-    Debug.LogFormat("[Player] HandleSquareClicked {0}", square.name);
+    if (Clicked == null) Click(gameController.PieceManager[square]);
+    else ClickToMove(square);
   }
 
   private void HandleSquareDragBegan(Square square) {
-    Debug.LogFormat("[Player] HandleSquareDragBegan {0}", square.name);
+    BeginDrag(gameController.PieceManager[square]);
   }
 
   private void HandleSquareDragEnded(Square square) {
-    Debug.LogFormat("[Player] HandleSquareDragEnded {0}", square.name);
+    EndDrag(gameController.PieceManager[square]);
   }
 
   private void HandleSquareDropped(Square square) {
-    Debug.LogFormat("[Player] HandleSquareDropped {0}", square.name);
+    DropOnto(square);
   }
 
   private void HandleSquareEntered(Square square) {

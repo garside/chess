@@ -63,8 +63,8 @@ public class Piece : MonoBehaviour {
     ReparentTo(square.transform);
   }
 
-  public void ReparentTo(Transform transform) {
-    transform.parent = transform;
+  public void ReparentTo(Transform target) {
+    transform.parent = target;
     transform.localPosition = Vector3.zero;
     transform.localScale = Vector3.one;
     rectTransform.offsetMin = Vector2.zero;
