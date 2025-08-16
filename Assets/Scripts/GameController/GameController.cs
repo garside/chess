@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(AudioManager))]
 [RequireComponent(typeof(BoardManager))]
+[RequireComponent(typeof(PieceManager))]
 public class GameController : MonoBehaviour {
   #region Constants
 
@@ -22,7 +23,7 @@ public class GameController : MonoBehaviour {
 
   #region Events
 
-  public UnityEvent OnReady;
+  [HideInInspector] public UnityEvent OnReady;
 
   #endregion
 
@@ -32,6 +33,8 @@ public class GameController : MonoBehaviour {
 
   public BoardManager BoardManager { get; private set; }
 
+  public PieceManager PieceManager { get; private set; }
+
   public bool IsReady { get; private set; }
 
   #endregion
@@ -40,6 +43,9 @@ public class GameController : MonoBehaviour {
 
   private void ReadyUp() {
     if (IsReady) return;
+    if (!BoardManager.IsReady) return;
+    if (!PieceManager.IsReady) return;
+
     IsReady = true;
     OnReady.Invoke();
   }
@@ -57,12 +63,14 @@ public class GameController : MonoBehaviour {
   #region Lifecycle
 
   private void Start() {
-
+    BoardManager.OnReady.AddListener(ReadyUp);
+    PieceManager.OnReady.AddListener(ReadyUp);
   }
 
   private void Awake() {
     AudioManager = GetComponent<AudioManager>();
     BoardManager = GetComponent<BoardManager>();
+    PieceManager = GetComponent<PieceManager>();
   }
 
   #endregion

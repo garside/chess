@@ -20,6 +20,7 @@ public class BoardManager : MonoBehaviour {
 
   #region Events
 
+  [HideInInspector] public UnityEvent OnReady;
   [HideInInspector] public SquareEvent OnSquareClicked;
   [HideInInspector] public SquareEvent OnSquareDragBegan;
   [HideInInspector] public SquareEvent OnSquareDragEnded;
@@ -30,6 +31,14 @@ public class BoardManager : MonoBehaviour {
   #endregion
 
   #region Properties
+
+  public bool IsReady => board.IsReady;
+
+  public Square[] Squares => board.Squares;
+
+  public Square this[int index] => board[index];
+
+  public Square this[int rank, int file] => board[rank, file];
 
   #endregion
 
@@ -48,12 +57,15 @@ public class BoardManager : MonoBehaviour {
   #region Lifecycle
 
   private void Start() {
-    board.OnSquareClicked.AddListener(square => OnSquareClicked.Invoke(square));
-    board.OnSquareDragBegan.AddListener(square => OnSquareDragBegan.Invoke(square));
-    board.OnSquareDragEnded.AddListener(square => OnSquareDragEnded.Invoke(square));
-    board.OnSquareDropped.AddListener(square => OnSquareDropped.Invoke(square));
-    board.OnSquareEntered.AddListener(square => OnSquareEntered.Invoke(square));
-    board.OnSquareExited.AddListener(square => OnSquareExited.Invoke(square));
+    if (board.IsReady) OnReady.Invoke();
+    else board.OnReady.AddListener(OnReady.Invoke);
+
+    board.OnSquareClicked.AddListener(OnSquareClicked.Invoke);
+    board.OnSquareDragBegan.AddListener(OnSquareDragBegan.Invoke);
+    board.OnSquareDragEnded.AddListener(OnSquareDragEnded.Invoke);
+    board.OnSquareDropped.AddListener(OnSquareDropped.Invoke);
+    board.OnSquareEntered.AddListener(OnSquareEntered.Invoke);
+    board.OnSquareExited.AddListener(OnSquareExited.Invoke);
   }
 
   #endregion

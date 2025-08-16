@@ -32,6 +32,7 @@ public class Board : MonoBehaviour {
 
   #region Events
 
+  [HideInInspector] public UnityEvent OnReady;
   [HideInInspector] public SquareEvent OnSquareClicked;
   [HideInInspector] public SquareEvent OnSquareDragBegan;
   [HideInInspector] public SquareEvent OnSquareDragEnded;
@@ -42,6 +43,8 @@ public class Board : MonoBehaviour {
   #endregion
 
   #region Properties
+
+  public bool IsReady { get; private set; }
 
   public Square[] Squares => squares.ToArray();
 
@@ -54,12 +57,12 @@ public class Board : MonoBehaviour {
   #region Methods
 
   private void Add(Square square) {
-    square.OnClicked.AddListener(square => OnSquareClicked.Invoke(square));
-    square.OnDragBegan.AddListener(square => OnSquareDragBegan.Invoke(square));
-    square.OnDragEnded.AddListener(square => OnSquareDragEnded.Invoke(square));
-    square.OnDropped.AddListener(square => OnSquareDropped.Invoke(square));
-    square.OnEntered.AddListener(square => OnSquareEntered.Invoke(square));
-    square.OnExited.AddListener(square => OnSquareExited.Invoke(square));
+    square.OnClicked.AddListener(OnSquareClicked.Invoke);
+    square.OnDragBegan.AddListener(OnSquareDragBegan.Invoke);
+    square.OnDragEnded.AddListener(OnSquareDragEnded.Invoke);
+    square.OnDropped.AddListener(OnSquareDropped.Invoke);
+    square.OnEntered.AddListener(OnSquareEntered.Invoke);
+    square.OnExited.AddListener(OnSquareExited.Invoke);
     squares.Add(square);
   }
 
@@ -77,6 +80,8 @@ public class Board : MonoBehaviour {
 
   private void Start() {
     for (int i = 0; i < SquareCount; i++) Add(Instantiate(squarePrefab, transform).GetComponent<Square>());
+    IsReady = true;
+    OnReady.Invoke();
   }
 
   private void Awake() {

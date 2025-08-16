@@ -20,6 +20,7 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IE
   public class Overlays {
     public Image opponentCoverage;
     public Image playerCoverage;
+    public Image border;
     public Image screen;
   }
 
@@ -61,6 +62,16 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IE
 
   public int File => Index % 8;
 
+  public bool BorderVisible {
+    get => overlays.border.enabled;
+    set => overlays.border.enabled = value;
+  }
+
+  public bool ScreenVisible {
+    get => overlays.screen.enabled;
+    set => overlays.screen.enabled = value;
+  }
+
   public float OpponentCoverageOpacity {
     get => overlays.opponentCoverage.color.a;
     set {
@@ -77,11 +88,6 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IE
       color.a = Mathf.Clamp01(value);
       overlays.playerCoverage.color = color;
     }
-  }
-
-  public bool ScreenVisible {
-    get => overlays.screen.enabled;
-    set => overlays.screen.enabled = value;
   }
 
   #endregion
@@ -119,9 +125,10 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IE
   private void Start() {
     name = ToString();
     image.color = IsWhite ? White : Black;
+    BorderVisible = false;
+    ScreenVisible = false;
     OpponentCoverageOpacity = 0f;
     PlayerCoverageOpacity = 0f;
-    ScreenVisible = false;
   }
 
   private void Awake() {

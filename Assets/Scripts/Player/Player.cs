@@ -23,7 +23,7 @@ public class Player : MonoBehaviour {
   [SerializeField] private AudioSource moveAbort;
 
   [Header("References")]
-  [SerializeField] private DragPiece dragPiece;
+  [SerializeField] private DragHarness dragHarness;
 
   private GameController gameController;
 
