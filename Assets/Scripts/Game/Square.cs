@@ -1,9 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Image))]
-public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler {
+public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IDragHandler, IDropHandler {
   #region Constants
 
   public static Color Black => new(0.88f, 0.88f, 0.88f);
@@ -12,6 +13,8 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
   #endregion
 
   #region Internal
+
+  [System.Serializable] public class SquareEvent : UnityEvent<Square> { }
 
   [System.Serializable]
   public class Overlays {
@@ -33,6 +36,13 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
   #endregion
 
   #region Events
+
+  [HideInInspector] public SquareEvent OnClicked;
+  [HideInInspector] public SquareEvent OnDragBegan;
+  [HideInInspector] public SquareEvent OnDragEnded;
+  [HideInInspector] public SquareEvent OnDropped;
+  [HideInInspector] public SquareEvent OnEntered;
+  [HideInInspector] public SquareEvent OnExited;
 
   #endregion
 
@@ -88,21 +98,19 @@ public class Square : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
 
   #region Handlers
 
-  void IPointerClickHandler.OnPointerClick(PointerEventData eventData) {
-    throw new System.NotImplementedException();
-  }
+  void IPointerClickHandler.OnPointerClick(PointerEventData eventData) => OnClicked.Invoke(this);
 
-  void IBeginDragHandler.OnBeginDrag(PointerEventData eventData) {
-    throw new System.NotImplementedException();
-  }
+  void IBeginDragHandler.OnBeginDrag(PointerEventData eventData) => OnDragBegan.Invoke(this);
 
-  void IDragHandler.OnDrag(PointerEventData eventData) {
-    throw new System.NotImplementedException();
-  }
+  public void OnDrag(PointerEventData eventData) { }
 
-  void IEndDragHandler.OnEndDrag(PointerEventData eventData) {
-    throw new System.NotImplementedException();
-  }
+  void IEndDragHandler.OnEndDrag(PointerEventData eventData) => OnDragEnded.Invoke(this);
+
+  void IDropHandler.OnDrop(PointerEventData eventData) => OnDropped.Invoke(this);
+
+  void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData) => OnEntered.Invoke(this);
+
+  void IPointerExitHandler.OnPointerExit(PointerEventData eventData) => OnExited.Invoke(this);
 
   #endregion
 

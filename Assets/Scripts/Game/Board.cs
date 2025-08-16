@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,8 @@ public class Board : MonoBehaviour {
 
   #region Internal
 
+  [System.Serializable] public class SquareEvent : UnityEvent<Square> { }
+
   #endregion
 
   #region Fields
@@ -28,6 +31,13 @@ public class Board : MonoBehaviour {
   #endregion
 
   #region Events
+
+  [HideInInspector] public SquareEvent OnSquareClicked;
+  [HideInInspector] public SquareEvent OnSquareDragBegan;
+  [HideInInspector] public SquareEvent OnSquareDragEnded;
+  [HideInInspector] public SquareEvent OnSquareDropped;
+  [HideInInspector] public SquareEvent OnSquareEntered;
+  [HideInInspector] public SquareEvent OnSquareExited;
 
   #endregion
 
@@ -43,6 +53,16 @@ public class Board : MonoBehaviour {
 
   #region Methods
 
+  private void Add(Square square) {
+    square.OnClicked.AddListener(square => OnSquareClicked.Invoke(square));
+    square.OnDragBegan.AddListener(square => OnSquareDragBegan.Invoke(square));
+    square.OnDragEnded.AddListener(square => OnSquareDragEnded.Invoke(square));
+    square.OnDropped.AddListener(square => OnSquareDropped.Invoke(square));
+    square.OnEntered.AddListener(square => OnSquareEntered.Invoke(square));
+    square.OnExited.AddListener(square => OnSquareExited.Invoke(square));
+    squares.Add(square);
+  }
+
   #endregion
 
   #region Coroutines
@@ -56,7 +76,7 @@ public class Board : MonoBehaviour {
   #region Lifecycle
 
   private void Start() {
-    for (int i = 0; i < SquareCount; i++) squares.Add(Instantiate(squarePrefab, transform).GetComponent<Square>());
+    for (int i = 0; i < SquareCount; i++) Add(Instantiate(squarePrefab, transform).GetComponent<Square>());
   }
 
   private void Awake() {
